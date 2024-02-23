@@ -1,0 +1,66 @@
+import sqlite3
+
+# Connect to SQLite database
+conn = sqlite3.connect('bookstore.db')
+cursor = conn.cursor()
+
+# Create the 'books' table if it doesn't exist
+cursor.execute('''
+    CREATE TABLE IF NOT EXISTS books (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        title TEXT,
+        author TEXT,
+        isbn TEXT
+    )
+''')
+conn.commit()
+
+def add_book(title, author, isbn):
+    cursor.execute('INSERT INTO books (title, author, isbn) VALUES (?, ?, ?)', (title, author, isbn))
+    conn.commit()
+    print("Book added successfully.")
+
+def remove_book(book_id):
+    cursor.execute('DELETE FROM books WHERE id = ?', (book_id,))
+    conn.commit()
+    print("Book removed successfully.")
+
+def update_book(book_id, title, author, isbn):
+    cursor.execute('''
+        UPDATE books
+        SET title = ?, author = ?, isbn = ?
+        WHERE id = ?
+    ''', (title, author, isbn, book_id))
+    conn.commit()
+    print("Book updated successfully.")
+
+def search_books(keyword):
+    cursor.execute('''
+        SELECT * FROM books
+        WHERE title LIKE ? OR author LIKE ? OR isbn LIKE ?
+    ''', (f'%{keyword}%', f'%{keyword}%', f'%{keyword}%'))
+    books = cursor.fetchall()
+
+    if not books:
+        print("No matching books found.")
+    else:
+        for book in books:
+            print(f"ID: {book[0]}, Title: {book[1]}, Author: {book[2]}, ISBN: {book[3]}")
+
+# Example usage
+add_book("The Great Gatsby", "F. Scott Fitzgerald", "9780142437014")
+add_book("To Kill a Mockingbird", "Harper Lee", "0061120081")
+add_book("1984", "George Orwell", "9780451524935")
+
+search_books("Harper Lee")
+
+update_book(2, "New Title", "New Author", "1234567890")
+
+search_books("New Title")
+
+remove_book(1)
+
+search_books("F. Scott Fitzgerald")
+
+# Close the connection
+conn.close()
